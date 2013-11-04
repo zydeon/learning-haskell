@@ -1,6 +1,7 @@
 module BlackJack where
 import Cards
 import Wrapper
+import Test.QuickCheck
 
 -- size hand2
 -- = size (Add (Card (Numeric 2) Hearts)
@@ -23,6 +24,7 @@ valueRank _           = 10
 
 valueCard :: Card -> Integer
 valueCard c = valueRank (rank c)
+-- valueCard (Card r _) = valueRank r   (I think this style is consistent with the rest of the code, and more readable, you agree?)
 
 -- Number of Aces in a Hand
 
@@ -49,10 +51,49 @@ value' (Add card hand) = (valueCard card) + (value' hand)
 gameOver :: Hand -> Bool
 gameOver hand = (value hand) > 21
 
+-- If the bank or player is the winner
+
+winner :: Hand -> Hand -> Player
+winner ghand _     | gameOver ghand = Bank
+winner ghand bhand | value bhand >= value ghand = Bank
+                   | otherwise = Guest
+
+
+-- Puts a hand on top of another one
+
+(<+):: Hand -> Hand -> Hand
+h1 <+ h2 = (reverseHand h1 Empty) <++ h2
+  where
+    (<++):: Hand -> Hand -> Hand
+    Empty <++ h2 = h2 
+    (Add card hand) <++ h2 = hand <++ (Add card h2) 
+
+
+-- Test if the function (<+) is associative
+
+prop_onTopOf_assoc :: Hand -> Hand -> Hand -> Bool
+prop_onTopOf_assoc p1 p2 p3 = p1 <+ (p2 <+ p3) == (p1 <+ p2) <+ p3
+
+
+-- Reverses a hand
+
+reverseHand :: Hand -> Hand -> Hand
+reverseHand Empty h2 = h2
+reverseHand (Add card hand) h2 = reverseHand hand (Add card h2) 
+
+
+-- Test the reverse function
+
+--prop_reverseHand :: Hand -> Bool
+--prop_reverseHand h = h == (reverseHand (reverseHand h Empty) Empty)
+
+prop_size_onTopOf :: Hand -> Hand -> Bool 
+prop_size_onTopOf h1 h2 = size h1 + size h2 == size (h1<+h2)
+
+
 -- Draw Card from deck and put on hand.
 -- Return (deck,hand)
 
 draw :: Hand -> Hand -> (Hand, Hand)
 draw Empty hand           = error "draw: The deck is empty."  -- change this later
 draw (Add card deck) hand = (deck,Add card hand)
-
