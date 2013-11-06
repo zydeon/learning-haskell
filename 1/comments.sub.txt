@@ -1,0 +1,13 @@
+Comments:
+----------
+General remarks:
+
+Can you call prop_powers in prop_powers' to reduce copied code?
+
+Tidy. Well done.
+
+/Dan
+
+
+----------
+

@@ -24,13 +24,12 @@ valueRank _           = 10
 
 valueCard :: Card -> Integer
 valueCard c = valueRank (rank c)
--- valueCard (Card r _) = valueRank r   (I think this style is consistent with the rest of the code, and more readable, you agree?)
 
 -- Number of Aces in a Hand
 
 numberOfAces :: Hand -> Integer
 numberOfAces Empty                   = 0
-numberOfAces (Add (Card Ace _) hand) = 1 + numberOfAces hand  -- stop when we reach 4 aces ??
+numberOfAces (Add (Card Ace _) hand) = 1 + numberOfAces hand
 numberOfAces (Add (Card _ _) hand)   = numberOfAces hand
 
 -- Value of a Hand
@@ -51,23 +50,19 @@ value' (Add card hand) = (valueCard card) + (value' hand)
 gameOver :: Hand -> Bool
 gameOver hand = (value hand) > 21
 
--- If the bank or player is the winner
+-- If the bank (bhand) or guest (ghand) is the winner
 
 winner :: Hand -> Hand -> Player
 winner ghand _     | gameOver ghand = Bank
+winner _     bhand | gameOver bhand = Guest
 winner ghand bhand | value bhand    >= value ghand = Bank
                    | otherwise      = Guest
-
 
 -- Puts a hand on top of another one
 
 (<+):: Hand -> Hand -> Hand
-h1 <+ h2 = (reverseHand h1 Empty) <++ h2
-  where
-    (<++):: Hand -> Hand -> Hand
-    Empty           <++ h2 = h2 
-    (Add card hand) <++ h2 = hand <++ (Add card h2) 
-
+Empty         <+ h = h
+(Add card h') <+ h = Add card (h' <+ h)
 
 -- Test if the function (<+) is associative
 
@@ -80,18 +75,6 @@ prop_onTopOf_assoc p1 p2 p3 = p1 <+ (p2 <+ p3) == (p1 <+ p2) <+ p3
 prop_size_onTopOf :: Hand -> Hand -> Bool 
 prop_size_onTopOf h1 h2 = size h1 + size h2 == size (h1<+h2)
 
--- Reverses a hand
-
-reverseHand :: Hand -> Hand -> Hand
-reverseHand  Empty h2          = h2
-reverseHand (Add card hand) h2 = reverseHand hand (Add card h2) 
-
-
--- Test the reverse function
-
-prop_reverseHand :: Hand -> Bool
-prop_reverseHand h = h == (reverseHand (reverseHand h Empty) Empty)
-
 -- Returns a hand of cards of the same suit.
 
 giveHand :: Suit -> Integer -> Hand -> Hand
@@ -100,7 +83,6 @@ giveHand    s  13 h             = giveHand s (14) (Add Card {rank = King , suit 
 giveHand    s  12 h             = giveHand s (13) (Add Card {rank = Queen , suit = s} h)
 giveHand    s  11 h             = giveHand s (12) (Add Card {rank = Jack , suit = s} h)
 giveHand    s  n  h | (n < 11)  = giveHand s (n+1) (Add Card {rank = Numeric n , suit = s} h)
-
 
 -- Returns a deck of cards.
 
@@ -121,7 +103,6 @@ prop_sizeTest = size fullDeck == 52
 draw :: Hand -> Hand -> (Hand, Hand)
 draw Empty hand           = error "draw: The deck is empty."  -- change this later
 draw (Add card deck) hand = (deck,Add card hand)
-
 
 
 {-implementation = Interface   Should be completed after all the functions are done!
