@@ -3,10 +3,17 @@ import Cards
 import Wrapper
 import Test.QuickCheck
 
+
+-- ========================== lab 2A =================
+
 -- size hand2
 -- = size (Add (Card (Numeric 2) Hearts)
--- (Add (Card Jack Spades) Empty))
--- = ... =2
+--             (Add (Card Jack Spades) Empty))
+-- = 1 + size (Add (Card Jack Spades) Empty)
+-- = 1 + (1 + size Empty)
+-- = 1 + 1 + 0
+-- = 2
+
 
 -- Return empty Hand
 
@@ -58,6 +65,10 @@ winner _     bhand | gameOver bhand = Guest
 winner ghand bhand | value bhand    >= value ghand = Bank
                    | otherwise      = Guest
 
+
+-- ========================== end of lab 2A =================
+
+
 -- Puts a hand on top of another one
 
 (<+):: Hand -> Hand -> Hand
@@ -89,9 +100,9 @@ giveHand    s  n  h | (n < 11)  = giveHand s (n+1) (Add Card {rank = Numeric n ,
 fullDeck :: Hand
 fullDeck =(giveHand Hearts 2 Empty) <+ (giveHand Spades 2 Empty) <+
           (giveHand Clubs 2 Empty)  <+ (giveHand Diamonds 2 Empty)
-		  
-		  
--- Tests the size of a full deck of cards.		  
+      
+      
+-- Tests the size of a full deck of cards.      
   
 prop_sizeTest :: Bool
 prop_sizeTest = size fullDeck == 52    
