@@ -2,6 +2,7 @@ module BlackJack where
 import Cards
 import Wrapper
 import Test.QuickCheck
+import System.Random
 
 
 -- ========================== lab 2A =================
@@ -136,6 +137,27 @@ prop_draw' = value (draw' fullDeck Empty) >= 16
 playBank :: Hand -> Hand
 playBank bh = draw' fullDeck bh
 
+-- Tests whether a card is in the deck after and before shuffling the deck.
+
+{-
+prop_shuffle_sameCards :: StdGen -> Card -> Hand -> Bool
+prop_shuffle_sameCards g c h =
+  c `belongsTo` h == c `belongsTo` shuffle g h -} 
+
+-- Whether a card is in the deck or not.
+
+belongsTo :: Card -> Hand -> Bool
+c `belongsTo` Empty      = False
+c `belongsTo` (Add c' h) = c == c' || c `belongsTo` h
+
+-- Shuffles a deck of cards.
+shuffle :: StdGen -> Hand -> Hand
+
+
+-- Tests whether size of the deck is preserved by shuffle.
+
+{-
+prop_size_shuffle :: StdGen -> Hand -> Bool --------------------------------------------------------- To be implemented. -}
 
 
 {-implementation = Interface   Should be completed after all the functions are done!
