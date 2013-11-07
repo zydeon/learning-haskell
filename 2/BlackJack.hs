@@ -87,25 +87,28 @@ prop_size_onTopOf :: Hand -> Hand -> Bool
 prop_size_onTopOf h1 h2 = size h1 + size h2 == size (h1<+h2)
 
 -- Returns a hand of cards of the same suit.
-
-giveHand :: Suit -> Integer -> Hand -> Hand
-giveHand    s  14 h             = Add Card {rank = Ace , suit = s} h
-giveHand    s  13 h             = giveHand s (14) (Add Card {rank = King , suit = s} h)
-giveHand    s  12 h             = giveHand s (13) (Add Card {rank = Queen , suit = s} h)
-giveHand    s  11 h             = giveHand s (12) (Add Card {rank = Jack , suit = s} h)
-giveHand    s  n  h | (n < 11)  = giveHand s (n+1) (Add Card {rank = Numeric n , suit = s} h)
+        
+giveHand :: Suit -> Integer -> Hand 
+giveHand s 14 = Add Card {rank = Ace , suit = s} Empty
+giveHand s 13 = Add Card {rank = King , suit = s} (giveHand s 14)
+giveHand s 12 = Add Card {rank = Queen , suit = s} (giveHand s 13)
+giveHand s 11 = Add Card {rank = Jack , suit = s} (giveHand s 12)           
+giveHand s n 
+         |(n<11) && (n>1)  = Add Card {rank = Numeric n, suit = s} (giveHand s (n+1))
+         |otherwise        = error "givehand: invalid value!"
+ 
 
 -- Returns a deck of cards.
 
 fullDeck :: Hand
-fullDeck =(giveHand Hearts 2 Empty) <+ (giveHand Spades 2 Empty) <+
-          (giveHand Clubs 2 Empty)  <+ (giveHand Diamonds 2 Empty)
+fullDeck =(giveHand Hearts 2) <+ (giveHand Spades 2) <+
+          (giveHand Clubs 2)  <+ (giveHand Diamonds 2)
       
       
 -- Tests the size of a full deck of cards.      
   
 prop_sizeTest :: Bool
-prop_sizeTest = size fullDeck == 52    
+prop_sizeTest = size fullDeck == 52
 
 
 -- Draw Card from deck and put on hand.
