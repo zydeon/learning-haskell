@@ -95,7 +95,7 @@ giveHand s 12 = Add Card {rank = Queen , suit = s} (giveHand s 13)
 giveHand s 11 = Add Card {rank = Jack , suit = s} (giveHand s 12)           
 giveHand s n 
          |(n<11) && (n>1)  = Add Card {rank = Numeric n, suit = s} (giveHand s (n+1))
-         |otherwise        = error "givehand: invalid value!"
+         |otherwise        = error "giveHand: invalid value!"
  
 
 -- Returns a deck of cards.
@@ -117,6 +117,25 @@ prop_sizeTest = size fullDeck == 52
 draw :: Hand -> Hand -> (Hand, Hand)
 draw Empty hand           = error "draw: The deck is empty."  -- change this later
 draw (Add card deck) hand = (deck,Add card hand)
+
+
+-- Draws card for the bank player
+
+draw' :: Hand -> Hand -> Hand
+draw' deck hand |(value hand >= 16) = hand
+                | otherwise         = draw' newDeck  newHand
+                    where (newDeck , newHand) = draw deck hand
+
+-- Tests the final value of bank hand
+
+prop_draw' :: Bool
+prop_draw' = value (draw' fullDeck Empty) >= 16
+
+-- Plays for the bank and returns the bank's final hand.
+ 
+playBank :: Hand -> Hand
+playBank bh = draw' fullDeck bh
+
 
 
 {-implementation = Interface   Should be completed after all the functions are done!
