@@ -150,9 +150,22 @@ belongsTo :: Card -> Hand -> Bool
 c `belongsTo` Empty      = False
 c `belongsTo` (Add c' h) = c == c' || c `belongsTo` h
 
--- Shuffles a deck of cards.
-shuffle :: StdGen -> Hand -> Hand
+-- returns n-th card from hand and the resulting hand
 
+nthcard :: Integer -> Hand -> (Card,Hand)
+nthcard _ Empty = error "nthcard: invalid number of card to return!"
+nthcard n _ | n <= 0 = error "nthcard: invalid number of card to return!"
+nthcard 1 (Add c h) = (c, h)
+nthcard n (Add c h) = (c', Add c h')
+            where (c',h') = nthcard (n-1) h
+
+-- Shuffles a deck of cards (stdgen, old deck, new deck)
+
+shuffle :: StdGen -> Hand -> Hand
+shuffle g Empty = Empty
+shuffle g old = Add card (shuffle g' old')
+    where   (r, g')      = randomR (1,size old) g
+            (card, old') = nthcard r old
 
 -- Tests whether size of the deck is preserved by shuffle.
 
