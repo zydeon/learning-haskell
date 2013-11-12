@@ -135,14 +135,8 @@ prop_draw' = value (draw' fullDeck Empty) >= 16
 -- Plays for the bank and returns the bank's final hand.
  
 playBank :: Hand -> Hand
-playBank bh = draw' fullDeck bh
-
--- Tests whether a card is in the deck after and before shuffling the deck.
-
-{-
-prop_shuffle_sameCards :: StdGen -> Card -> Hand -> Bool
-prop_shuffle_sameCards g c h =
-  c `belongsTo` h == c `belongsTo` shuffle g h -} 
+playBank bh = draw' (shuffle (mkStdGen 1) fullDeck) bh
+ 
 
 -- Whether a card is in the deck or not.
 
@@ -150,37 +144,48 @@ belongsTo :: Card -> Hand -> Bool
 c `belongsTo` Empty      = False
 c `belongsTo` (Add c' h) = c == c' || c `belongsTo` h
 
+
+-- Tests whether a card is in the deck after and before shuffling the deck.
+
+prop_shuffle_sameCards :: StdGen -> Card -> Hand -> Bool
+prop_shuffle_sameCards g c h =
+  c `belongsTo` h == c `belongsTo` shuffle g h 
+  
+
 -- returns n-th card from hand and the resulting hand
 
 nthcard :: Integer -> Hand -> (Card,Hand)
-nthcard _ Empty = error "nthcard: invalid number of card to return!"
+nthcard _ Empty      = error "nthcard: invalid number of card to return!"
 nthcard n _ | n <= 0 = error "nthcard: invalid number of card to return!"
-nthcard 1 (Add c h) = (c, h)
-nthcard n (Add c h) = (c', Add c h')
+nthcard 1 (Add c h)  = (c, h)
+nthcard n (Add c h)  = (c', Add c h')
             where (c',h') = nthcard (n-1) h
 
 -- Shuffles a deck of cards (stdgen, old deck, new deck)
 
 shuffle :: StdGen -> Hand -> Hand
 shuffle g Empty = Empty
-shuffle g old = Add card (shuffle g' old')
+shuffle g old   = Add card (shuffle g' old')
     where   (r, g')      = randomR (1,size old) g
             (card, old') = nthcard r old
 
+			
 -- Tests whether size of the deck is preserved by shuffle.
 
-{-
-prop_size_shuffle :: StdGen -> Hand -> Bool --------------------------------------------------------- To be implemented. -}
+prop_size_shuffle :: StdGen -> Hand -> Bool
+prop_size_shuffle g h = size h == size (shuffle (mkStdGen 1) h)
 
 
-{-implementation = Interface   Should be completed after all the functions are done!
+{-implementation = Interface 
  {
  iEmpty    = empty ,
  iFullDeck = fullDeck ,
  iValue    = value ,
  iGameOver = gameOver ,
- iWinner   = winner,
- iDraw     = draw
+ iWinner   = winner ,
+ iDraw     = draw ,
+ iPlayBank = playBank ,
+ iShuffle  = shuffle
  }
 
 main :: IO ()
