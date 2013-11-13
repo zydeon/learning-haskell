@@ -116,26 +116,26 @@ prop_sizeTest = size fullDeck == 52
 -- Return (deck,hand)
 
 draw :: Hand -> Hand -> (Hand, Hand)
-draw Empty hand           = error "draw: The deck is empty."  -- change this later
+draw Empty hand           = error "draw: The deck is empty."
 draw (Add card deck) hand = (deck,Add card hand)
 
 
 -- Draws card for the bank player
 
-draw' :: Hand -> Hand -> Hand
-draw' deck hand |(value hand >= 16) = hand
-                | otherwise         = draw' newDeck  newHand
-                    where (newDeck , newHand) = draw deck hand
+playBank' :: Hand -> Hand -> Hand
+playBank' deck hand |(value hand >= 16) = hand
+                    | otherwise         = playBank' newDeck  newHand
+                       where (newDeck , newHand) = draw deck hand
 
 -- Tests the final value of bank hand
 
 prop_draw' :: Bool
-prop_draw' = value (draw' fullDeck Empty) >= 16
+prop_draw' = value (playBank' fullDeck Empty) >= 16
 
 -- Plays for the bank and returns the bank's final hand.
  
 playBank :: Hand -> Hand
-playBank bh = draw' (shuffle (mkStdGen 1) fullDeck) bh
+playBank bh = playBank' (shuffle (mkStdGen 1) fullDeck) bh
  
 
 -- Whether a card is in the deck or not.
