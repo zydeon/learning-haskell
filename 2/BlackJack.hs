@@ -176,7 +176,7 @@ prop_size_shuffle :: StdGen -> Hand -> Bool
 prop_size_shuffle g h = size h == size (shuffle (mkStdGen 1) h)
 
 
-{-implementation = Interface 
+implementation = Interface 
  {
  iEmpty    = empty ,
  iFullDeck = fullDeck ,
@@ -189,4 +189,4 @@ prop_size_shuffle g h = size h == size (shuffle (mkStdGen 1) h)
  }
 
 main :: IO ()
-main = runGame implementation -}
+main = runGame implementation
