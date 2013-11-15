@@ -23,15 +23,13 @@ isSudoku Sudoku {rows = list}
 
 -- Checks the size of each list
 checkSize :: [[Maybe Int]] -> Bool
-checkSize (l1:[])                     = (length l1 == 9)
-checkSize (l1:ls) | (length l1 == 9)  = checkSize ls
-                  | otherwise         = False  
+checkSize list = and [(length l == 9) | l <- list] 
+
 
 -- Checks the elemens of each list
 checkLists :: [[Maybe Int]] -> Bool
-checkLists (l1 : [])                = isInRange l1
-checkLists (l1 : ls) | isInRange l1 = checkLists ls
-                     | otherwise    = False 
+checkLists list = and [ isInRange a | a <- list]
+
 
 -- Checks the range of elements
 isInRange :: [Maybe Int] -> Bool
@@ -42,9 +40,14 @@ isInRange (Just a : nums) | (a<10) && (a>0) = isInRange nums
 isInrange (Nothing : nums)                  = isInRange nums
 
 
+
 -- A3: isSolved sud checks if sud is already solved, i.e. there are no blanks
 isSolved :: Sudoku -> Bool
-isSolved = undefined
+isSolved Sudoku {rows = list} = and [hasNoth a | a <- list]
+
+
+hasNoth :: [Maybe Int] -> Bool
+hasNoth list = and [ False | a <- list , (a == Nothing) ]
 
 -------------------------------------------------------------------------
 
