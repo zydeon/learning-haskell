@@ -135,7 +135,7 @@ prop_draw' = value (playBank' fullDeck Empty) >= 16
 -- Plays for the bank and returns the bank's final hand.
  
 playBank :: Hand -> Hand
-playBank bh = playBank' (shuffle (mkStdGen 1) fullDeck) bh
+playBank bh = playBank'  fullDeck bh 
  
 
 -- Whether a card is in the deck or not.
