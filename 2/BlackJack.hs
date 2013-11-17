@@ -135,7 +135,7 @@ prop_draw' = value (playBank' fullDeck Empty) >= 16
 -- Plays for the bank and returns the bank's final hand.
  
 playBank :: Hand -> Hand
-playBank bh = playBank'  fullDeck bh 
+playBank deck = playBank'  deck Empty 
  
 
 -- Whether a card is in the deck or not.
