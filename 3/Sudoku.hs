@@ -53,8 +53,23 @@ hasNoth list = and [ False | a <- list , (a == Nothing) ]
 
 -- printSudoku sud prints a representation of the sudoku sud on the screen
 printSudoku :: Sudoku -> IO ()
-printSudoku = undefined
+printSudoku s = mapM_ printCell (rows s)
 
+-- prints out each row of the Sudoku
+printCell :: [Maybe Int] -> IO ()
+printCell (c:[]) | c == Nothing = putStrLn "."
+printCell (c:[]) | otherwise    = putStrLn $ show a ++ "\n"
+                    where Just a = c
+printCell (c:cs) | c == Nothing = do
+                                  putStr "."
+                                  printCell cs
+                 | otherwise    = do
+                                  putStr $ show a
+                                  printCell cs
+                           where Just a = c  
+
+
+main = printSudoku allBlankSudoku  -- To test! 
 -- readSudoku file reads from the file, and either delivers it, or stops
 -- if the file did not contain a sudoku
 readSudoku :: FilePath -> IO Sudoku
