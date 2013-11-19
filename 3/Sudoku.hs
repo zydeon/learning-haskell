@@ -1,4 +1,3 @@
-
 module Sudoku where
 
 import Test.QuickCheck
@@ -31,7 +30,7 @@ checkSize list = and [(length l == 9) | l <- list]
 
 -- Checks the elemens of each list
 checkLists :: [[Maybe Int]] -> Bool
-checkLists list = and [ isInRange a | a <- list]
+checkLists list = and [isInRange a | a <- list]
 
 
 -- Checks the range of elements
@@ -49,7 +48,7 @@ isSolved :: Sudoku -> Bool
 isSolved Sudoku {rows = list} = and [hasNoth a | a <- list]
   where 
     hasNoth :: [Maybe Int] -> Bool
-    hasNoth list = and [ False | a <- list , (a == Nothing) ]
+    hasNoth list = and [False | a <- list , (a == Nothing)]
 
 -------------------------------------------------------------------------
 
@@ -106,7 +105,7 @@ main = do
 
 -- cell generates an arbitrary cell in a Sudoku
 cell :: Gen (Maybe Int)
-cell = undefined
+cell = frequency $ [(1,return $ Just a) | a <- [1..9]] ++ [(1,return Nothing)]
 
 -- an instance for generating Arbitrary Sudokus
 instance Arbitrary Sudoku where
