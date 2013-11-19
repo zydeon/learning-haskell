@@ -1,6 +1,9 @@
+
 module Sudoku where
 
 import Test.QuickCheck
+import System.IO
+import Data.Char
 
 -------------------------------------------------------------------------
 
@@ -44,37 +47,61 @@ isInrange (Nothing : nums)                  = isInRange nums
 -- A3: isSolved sud checks if sud is already solved, i.e. there are no blanks
 isSolved :: Sudoku -> Bool
 isSolved Sudoku {rows = list} = and [hasNoth a | a <- list]
-
-
-hasNoth :: [Maybe Int] -> Bool
-hasNoth list = and [ False | a <- list , (a == Nothing) ]
+  where 
+    hasNoth :: [Maybe Int] -> Bool
+    hasNoth list = and [ False | a <- list , (a == Nothing) ]
 
 -------------------------------------------------------------------------
 
 -- printSudoku sud prints a representation of the sudoku sud on the screen
 printSudoku :: Sudoku -> IO ()
 printSudoku s = mapM_ printCell (rows s)
-
--- prints out each row of the Sudoku
-printCell :: [Maybe Int] -> IO ()
-printCell (c:[]) | c == Nothing = putStrLn "."
-printCell (c:[]) | otherwise    = putStrLn $ show a ++ "\n"
+  where 
+    -- prints out each row of the Sudoku
+    printCell :: [Maybe Int] -> IO ()
+    printCell (c:[]) |c == Nothing = putStrLn "."
+    printCell (c:[]) |otherwise    = putStrLn $ show a
                     where Just a = c
-printCell (c:cs) | c == Nothing = do
-                                  putStr "."
-                                  printCell cs
-                 | otherwise    = do
-                                  putStr $ show a
-                                  printCell cs
-                           where Just a = c  
+    printCell (c:cs) |c == Nothing = do
+                                     putStr "."
+                                     printCell cs
+                     |otherwise    = do
+                                     putStr $ show a
+                                     printCell cs
+                                      where Just a = c  
 
 
-main = printSudoku allBlankSudoku  -- To test! 
 -- readSudoku file reads from the file, and either delivers it, or stops
 -- if the file did not contain a sudoku
 readSudoku :: FilePath -> IO Sudoku
-readSudoku = undefined
+readSudoku path = do
+          res <- openFile path ReadMode
+          content <- hGetContents res
+          if null content
+          then do
+           hClose res
+           putStrLn "No Sudoku to read from file!\nAn empty sudoku is returned:"
+           return allBlankSudoku
+          else do              
+             return $toSud $toLists $lines content
+              where
+                toSud :: [[Maybe Int]] -> Sudoku
+                toSud ls = Sudoku {rows = ls}
 
+                toLists :: [String] -> [[Maybe Int]]
+                toLists (st:[])  = [toMaybe st]
+                toLists (st:sts) = [toMaybe st] ++ toLists sts
+
+                toMaybe :: String -> [Maybe Int]
+                toMaybe (c:[]) |c == '.'  = [Nothing]
+                               |otherwise = [Just (digitToInt c)]
+                toMaybe (c:cs) |c == '.'  = [Nothing] ++ toMaybe cs
+                               |otherwise = [Just (digitToInt c)] ++ toMaybe cs
+
+-- To test!
+main = do 
+       r <-(readSudoku "C:/Users/Mozhan/Desktop/sudokus/hard40.sud")
+       printSudoku r
 -------------------------------------------------------------------------
 
 -- cell generates an arbitrary cell in a Sudoku
