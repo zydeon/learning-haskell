@@ -35,11 +35,11 @@ checkLists list = and [isInRange a | a <- list]
 
 -- Checks the range of elements
 isInRange :: [Maybe Int] -> Bool
-isInRange (Just a : [])                     = (a<10) && (a>0)
-isInRange (Nothing : [])                    = True  
-isInRange (Just a : nums) | (a<10) && (a>0) = isInRange nums
-                          | otherwise       = False
-isInrange (Nothing : nums)                  = isInRange nums
+isInRange (Just a:[])                   = (a<10) && (a>0)
+isInRange (_:[])                        = True  
+isInRange (Just a:nums) |(a>9) || (a<1) = False
+                        |otherwise      = isInRange nums
+isInRange (_:nums)                      = isInRange nums
 
 
 
@@ -52,7 +52,7 @@ isSolved Sudoku {rows = list} = and [hasNoth a | a <- list]
 
 -------------------------------------------------------------------------
 
--- printSudoku sud prints a representation of the sudoku sud on the screen
+-- B1: printSudoku sud prints a representation of the sudoku sud on the screen
 printSudoku :: Sudoku -> IO ()
 printSudoku s = mapM_ printCell (rows s)
   where 
@@ -70,7 +70,7 @@ printSudoku s = mapM_ printCell (rows s)
                                       where Just a = c  
 
 
--- readSudoku file reads from the file, and either delivers it, or stops
+-- B2: readSudoku file reads from the file, and either delivers it, or stops
 -- if the file did not contain a sudoku
 readSudoku :: FilePath -> IO Sudoku
 readSudoku path = do
@@ -97,20 +97,22 @@ readSudoku path = do
                 toMaybe (c:cs) |c == '.'  = [Nothing] ++ toMaybe cs
                                |otherwise = [Just (digitToInt c)] ++ toMaybe cs
 
--- To test!
-main = do 
-       r <-(readSudoku "C:/Users/Mozhan/Desktop/sudokus/hard40.sud")
-       printSudoku r
 -------------------------------------------------------------------------
 
--- cell generates an arbitrary cell in a Sudoku
+-- C1: cell generates an arbitrary cell in a Sudoku
 cell :: Gen (Maybe Int)
-cell = frequency $ [(1,return $ Just a) | a <- [1..9]] ++ [(1,return Nothing)]
+cell = frequency $ [(1,return $ Just a) | a <- [1..9]] ++ [(9,return Nothing)]
 
--- an instance for generating Arbitrary Sudokus
+-- C2: an instance for generating Arbitrary Sudokus
 instance Arbitrary Sudoku where
   arbitrary =
     do rows <- sequence [ sequence [ cell | j <- [1..9] ] | i <- [1..9] ]
        return (Sudoku rows)
 
+-- C3: QuickCheck properties
+prop_Sudoku :: Sudoku -> Bool
+prop_Sudoku s = isSudoku s
+
+prop_Sudoku2 :: Sudoku -> Property
+prop_Sudoku2 s =  collect s (isSudoku s)
 -------------------------------------------------------------------------
