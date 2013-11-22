@@ -1,3 +1,4 @@
+
 module Sudoku where
 
 import Test.QuickCheck
@@ -15,13 +16,9 @@ data Sudoku = Sudoku { rows :: [[Maybe Int]] }
 allBlankSudoku :: Sudoku
 allBlankSudoku = Sudoku {rows = replicate 9 (replicate 9 Nothing)}
 
--- A2: Checks the Sudoku conditions
+-- A2: checks the sudoku conditions
 isSudoku :: Sudoku -> Bool
-isSudoku Sudoku {rows = list}
-                | (length list == 9) && ( checkSize list &&
-                     checkLists list) =  True
-
-                | otherwise   = False 
+isSudoku (Sudoku list) = (length list == 9) && (checkSize list && checkLists list)
 
 -- Checks the size of each list
 checkSize :: [[Maybe Int]] -> Bool
@@ -30,17 +27,15 @@ checkSize list = and [(length l == 9) | l <- list]
 
 -- Checks the elemens of each list
 checkLists :: [[Maybe Int]] -> Bool
-checkLists list = and [isInRange a | a <- list]
-
-
--- Checks the range of elements
-isInRange :: [Maybe Int] -> Bool
-isInRange (Just a:[])                   = (a<10) && (a>0)
-isInRange (_:[])                        = True  
-isInRange (Just a:nums) |(a>9) || (a<1) = False
-                        |otherwise      = isInRange nums
-isInRange (_:nums)                      = isInRange nums
-
+checkLists list = and [inRange a | a <- list]
+  where
+    -- Checks the range of elements
+    inRange :: [Maybe Int] -> Bool
+    inRange mbs = and $ map checkRange mbs
+        where 
+          checkRange :: Maybe Int -> Bool
+          checkRange (Just a) = (a<10) && (a>0)
+          checkRange _        = True 
 
 
 -- A3: isSolved sud checks if sud is already solved, i.e. there are no blanks
@@ -58,9 +53,7 @@ printSudoku s = mapM_ printCell (rows s)
   where 
     -- prints out each row of the Sudoku
     printCell :: [Maybe Int] -> IO ()
-    printCell (c:[]) |c == Nothing = putStrLn "."
-    printCell (c:[]) |otherwise    = putStrLn $ show a
-                    where Just a = c
+    printCell []                   = putStrLn ""
     printCell (c:cs) |c == Nothing = do
                                      putStr "."
                                      printCell cs
@@ -87,16 +80,17 @@ readSudoku path = do
                 toSud :: [[Maybe Int]] -> Sudoku
                 toSud ls = Sudoku {rows = ls}
 
-                toLists :: [String] -> [[Maybe Int]]
-                toLists (st:[])  = [toMaybe st]
-                toLists (st:sts) = [toMaybe st] ++ toLists sts
+                toLists :: [String] -> [[Maybe Int]]             
+                toLists strs = map toMaybe strs
 
                 toMaybe :: String -> [Maybe Int]
-                toMaybe (c:[]) |c == '.'  = [Nothing]
-                               |otherwise = [Just (digitToInt c)]
-                toMaybe (c:cs) |c == '.'  = [Nothing] ++ toMaybe cs
-                               |otherwise = [Just (digitToInt c)] ++ toMaybe cs
-
+                toMaybe str = map makeMaybe str
+                 where
+                   makeMaybe :: Char -> Maybe Int
+                   makeMaybe '.'    = Nothing
+                   makeMaybe c      = Just (digitToInt c)
+-- To test!
+main = readSudoku  "C:/Users/Mozhan/Desktop/sudokus/easy22.sud"
 -------------------------------------------------------------------------
 
 -- C1: cell generates an arbitrary cell in a Sudoku
