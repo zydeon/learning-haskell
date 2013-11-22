@@ -112,6 +112,7 @@ prop_Sudoku2 :: Sudoku -> Property
 prop_Sudoku2 s =  collect s (isSudoku s)
 -------------------------------------------------------------------------
 type Block = [Maybe Int]
+
 -- D1: Checks whether a block has a digit twice.
 isOkayBlock :: Block -> Bool
 isOkayBlock b = (length b == length (nubBy areEqual b))
@@ -119,3 +120,14 @@ isOkayBlock b = (length b == length (nubBy areEqual b))
    areEqual :: Maybe Int -> Maybe Int -> Bool
    areEqual (Just a)(Just b) = (a == b)
    areEqual  _ _             = False
+
+-- D2: Returns all blocks of a Sudoku
+getRows :: Sudoku -> [[Maybe Int]]
+getRows (Sudoku lists) = lists
+
+getCulumns :: Sudoku -> [[Maybe Int]]
+getCulumns (Sudoku ls) = transpose ls
+
+--getOtherBlocks :: Sudoku -> [[Maybe Int]]
+
+
