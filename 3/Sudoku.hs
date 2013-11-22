@@ -4,6 +4,7 @@ module Sudoku where
 import Test.QuickCheck
 import System.IO
 import Data.Char
+import Data.List
 
 -------------------------------------------------------------------------
 
@@ -110,3 +111,11 @@ prop_Sudoku s = isSudoku s
 prop_Sudoku2 :: Sudoku -> Property
 prop_Sudoku2 s =  collect s (isSudoku s)
 -------------------------------------------------------------------------
+type Block = [Maybe Int]
+-- D1: Checks whether a block has a digit twice.
+isOkayBlock :: Block -> Bool
+isOkayBlock b = (length b == length (nubBy areEqual b))
+ where 
+   areEqual :: Maybe Int -> Maybe Int -> Bool
+   areEqual (Just a)(Just b) = (a == b)
+   areEqual  _ _             = False
