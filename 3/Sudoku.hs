@@ -156,3 +156,5 @@ prop_blocks :: Sudoku -> Bool
 prop_blocks s = length (blocks s) == 3*9 && and [length b == 9 | b <- (blocks s)]
 
 -- D3: D1 for all blocks
+isOkay :: Sudoku -> Bool
+isOkay s = and [isOkayBlock b | b <- (blocks s)]
