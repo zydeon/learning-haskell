@@ -25,7 +25,6 @@ isSudoku (Sudoku list) = (length list == 9) && (checkSize list && checkLists lis
 checkSize :: [[Maybe Int]] -> Bool
 checkSize list = and [(length l == 9) | l <- list] 
 
-
 -- Checks the elemens of each list
 checkLists :: [[Maybe Int]] -> Bool
 checkLists list = and [inRange a | a <- list]
@@ -38,6 +37,13 @@ checkLists list = and [inRange a | a <- list]
           checkRange (Just a) = (a<10) && (a>0)
           checkRange _        = True 
 
+--checkLists :: [[Maybe Int]] -> Bool
+--checkLists list = and [and [checkRange a | a <- l] | l <- list]
+--  where 
+--          checkRange :: Maybe Int -> Bool
+--          checkRange (Just a) = (a<10) && (a>0)
+--          checkRange _        = True 
+
 
 -- A3: isSolved sud checks if sud is already solved, i.e. there are no blanks
 isSolved :: Sudoku -> Bool
@@ -45,6 +51,9 @@ isSolved Sudoku {rows = list} = and [hasNoth a | a <- list]
   where 
     hasNoth :: [Maybe Int] -> Bool
     hasNoth list = and [False | a <- list , (a == Nothing)]
+
+--isSolved :: Sudoku -> Bool
+--isSolved Sudoku list = and [and [False | b <- a, (a == Nothing)] | a <- list]
 
 -------------------------------------------------------------------------
 
@@ -89,7 +98,7 @@ readSudoku path = do
                  where
                    makeMaybe :: Char -> Maybe Int
                    makeMaybe '.'    = Nothing
-                   makeMaybe c      = Just (digitToInt c)
+                   makeMaybe c      = Just (digitToInt c)                
 -- To test!
 main = readSudoku  "C:/Users/Mozhan/Desktop/sudokus/easy22.sud"
 -------------------------------------------------------------------------
@@ -115,19 +124,35 @@ type Block = [Maybe Int]
 
 -- D1: Checks whether a block has a digit twice.
 isOkayBlock :: Block -> Bool
-isOkayBlock b = (length b == length (nubBy areEqual b))
+isOkayBlock b = (length b == length (nubBy areEqual b)) && length b == 9
  where 
    areEqual :: Maybe Int -> Maybe Int -> Bool
    areEqual (Just a)(Just b) = (a == b)
    areEqual  _ _             = False
 
 -- D2: Returns all blocks of a Sudoku
-getRows :: Sudoku -> [[Maybe Int]]
+getRows :: Sudoku -> [Block]
 getRows (Sudoku lists) = lists
 
-getCulumns :: Sudoku -> [[Maybe Int]]
-getCulumns (Sudoku ls) = transpose ls
+getColumns :: Sudoku -> [Block]
+getColumns (Sudoku ls) = transpose ls
 
---getOtherBlocks :: Sudoku -> [[Maybe Int]]
+getSquares :: Sudoku -> [Block]
+getSquares (Sudoku ([]:([]:([]:[])))) = []
+getSquares (Sudoku ([]:([]:([]:xs)))) = getSquares (Sudoku xs)    -- change to next row of squares
+getSquares (Sudoku (l1:(l2:(l3:xs)))) = (h1++h2++h3) : (getSquares (Sudoku (t1:(t2:(t3:xs)))))
+                                    where
+                                        h1 = take 3 l1
+                                        h2 = take 3 l2
+                                        h3 = take 3 l3
+                                        t1 = drop 3 l1
+                                        t2 = drop 3 l2
+                                        t3 = drop 3 l3
 
+blocks :: Sudoku -> [Block]
+blocks s = (getRows s) ++ (getColumns s) ++ (getSquares s)
 
+prop_blocks :: Sudoku -> Bool
+prop_blocks s = length (blocks s) == 3*9 && and [length b == 9 | b <- (blocks s)]
+
+-- D3: D1 for all blocks
