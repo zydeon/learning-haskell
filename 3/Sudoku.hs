@@ -1,4 +1,3 @@
-
 module Sudoku where
 
 import Test.QuickCheck
@@ -11,7 +10,6 @@ import Data.List
 data Sudoku = Sudoku { rows :: [[Maybe Int]] }
  deriving ( Show, Eq )
    
-
 
 -- A1: allBlankSudoku is a sudoku with just blanks
 allBlankSudoku :: Sudoku
@@ -36,13 +34,6 @@ checkLists list = and [inRange a | a <- list]
           checkRange :: Maybe Int -> Bool
           checkRange (Just a) = (a<10) && (a>0)
           checkRange _        = True 
-
---checkLists :: [[Maybe Int]] -> Bool
---checkLists list = and [and [checkRange a | a <- l] | l <- list]
---  where 
---          checkRange :: Maybe Int -> Bool
---          checkRange (Just a) = (a<10) && (a>0)
---          checkRange _        = True 
 
 
 -- A3: isSolved sud checks if sud is already solved, i.e. there are no blanks
@@ -84,8 +75,6 @@ readSudoku path = do
                    makeMaybe :: Char -> Maybe Int
                    makeMaybe '.'    = Nothing
                    makeMaybe c      = Just (digitToInt c)                
--- To test!
-main = readSudoku  "C:/Users/Mozhan/Desktop/sudokus/easy22.sud"
 -------------------------------------------------------------------------
 
 -- C1: cell generates an arbitrary cell in a Sudoku
@@ -143,3 +132,10 @@ prop_blocks s = length (blocks s) == 3*9 && and [length b == 9 | b <- (blocks s)
 -- D3: D1 for all blocks
 isOkay :: Sudoku -> Bool
 isOkay s = and [isOkayBlock b | b <- (blocks s)]
+
+
+-------------------------------------------------------------------------
+type Pos = (Int,Int)
+-- E1: Returns a list of blank positions.
+blanks :: Sudoku -> [Pos]
+blanks = undefined
