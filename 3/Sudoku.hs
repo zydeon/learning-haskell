@@ -37,16 +37,12 @@ checkLists list = and [inRange a | a <- list]
 
 
 -- A3: isSolved sud checks if sud is already solved, i.e. there are no blanks
-isSolved :: Sudoku -> Bool
-<<<<<<< HEAD
+{-isSolved :: Sudoku -> Bool
 isSolved (Sudoku list) = and [hasNoth a | a <- list]
- 
-hasNoth :: [Maybe Int] -> Bool
-hasNoth list = and [False | a <- list , (a == Nothing)]
-=======
+ where 
+   hasNoth :: [Maybe Int] -> Bool
+   hasNoth list = and [False | a <- list , (a == Nothing)]-}
 isSolved = all (all (/= Nothing)) . rows
->>>>>>> 554ddfb5493640e23fe2444cf2415a9d055ec1aa
-
 -------------------------------------------------------------------------
 
 -- B1: printSudoku sud prints a representation of the sudoku sud on the screen
@@ -145,4 +141,21 @@ isOkay s = and [isOkayBlock b | b <- (blocks s)]
 type Pos = (Int,Int)
 -- E1: Returns a list of blank positions.
 blanks :: Sudoku -> [Pos]
-blanks = undefined
+blanks sud = getPoses 0 (getRows sud)
+ where
+  getPoses :: Int -> [[Maybe Int]] -> [Pos]
+  getPoses _ []     = []
+  getPoses r (l:ls) = getPos r 0 l ++ getPoses (r+1) ls
+
+  getPos :: Int -> Int -> [Maybe Int] -> [Pos]
+  getPos _ _ []           = []
+  getPos m n (Nothing:cs) = [(m,n)]++ getPos m (n+1) cs
+  getPos m n (_:cs)       = getPos m (n+1) cs
+
+-- non-exhaustive patterns!!!
+checkCells :: [Pos] -> [[Maybe Int]] -> [Bool]
+checkcells  [] _  = []
+checkCells ((r,c):ps) ls = [((ls !! r) !! c)== Nothing] ++ checkCells ps ls
+
+prop_test :: Bool
+prop_test = and (checkCells (blanks allBlankSudoku) (rows allBlankSudoku)) 
