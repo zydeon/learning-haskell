@@ -38,27 +38,25 @@ checkLists list = and [inRange a | a <- list]
 
 -- A3: isSolved sud checks if sud is already solved, i.e. there are no blanks
 isSolved :: Sudoku -> Bool
+<<<<<<< HEAD
 isSolved (Sudoku list) = and [hasNoth a | a <- list]
  
 hasNoth :: [Maybe Int] -> Bool
 hasNoth list = and [False | a <- list , (a == Nothing)]
+=======
+isSolved = all (all (/= Nothing)) . rows
+>>>>>>> 554ddfb5493640e23fe2444cf2415a9d055ec1aa
 
 -------------------------------------------------------------------------
 
 -- B1: printSudoku sud prints a representation of the sudoku sud on the screen
 printSudoku :: Sudoku -> IO ()
-printSudoku s = mapM_ printCell (rows s)
+printSudoku s = mapM_ (\r -> do mapM_ printCell r; putStr "\n") (rows s)
   where 
-    -- prints out each row of the Sudoku
-    printCell :: [Maybe Int] -> IO ()
-    printCell []                   = putStrLn ""
-    printCell (c:cs) |c == Nothing = do
-                                     putStr "."
-                                     printCell cs
-                     |otherwise    = do
-                                     putStr $ show a
-                                     printCell cs
-                                      where Just a = c  
+    -- prints out each cell of the Sudoku
+    printCell :: Maybe Int -> IO ()
+    printCell Nothing  = do putStr "."
+    printCell (Just a) = do putStr $ show a
 
 
 -- B2: readSudoku file reads from the file, and either delivers it, or stops
@@ -73,11 +71,8 @@ readSudoku path = do
            putStrLn "No Sudoku to read from file!\nAn empty sudoku is returned:"
            return allBlankSudoku
           else do              
-             return $toSud $toLists $lines content
+             return $Sudoku $toLists $lines content
               where
-                toSud :: [[Maybe Int]] -> Sudoku
-                toSud ls = Sudoku {rows = ls}
-
                 toLists :: [String] -> [[Maybe Int]]             
                 toLists strs = map toMaybe strs
 
@@ -126,7 +121,7 @@ getColumns (Sudoku ls) = transpose ls
 getSquares :: Sudoku -> [Block]
 getSquares (Sudoku ([]:([]:([]:[])))) = []
 getSquares (Sudoku ([]:([]:([]:xs)))) = getSquares (Sudoku xs)    -- change to next row of squares
-getSquares (Sudoku (l1:(l2:(l3:xs)))) = (h1++h2++h3) : (getSquares (Sudoku (t1:(t2:(t3:xs)))))
+getSquares (Sudoku (l1:(l2:(l3:xs)))) = (h1++h2++h3) : (getSquares (Sudoku (t1:(t2:(t3:xs))))) -- change to next column of squares
                                     where
                                         h1 = take 3 l1
                                         h2 = take 3 l2
