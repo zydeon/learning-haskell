@@ -201,3 +201,16 @@ solve' s | null blanks_     = Just s
                   solve'' s p (c:cs) | solution == Nothing  = solve'' s p cs
                                      | otherwise            = solution 
                                         where solution = solve' (update s p c) 
+
+
+-- F2: solving sudoku from file
+readAndSolve :: FilePath -> IO ()
+readAndSolve path = do 
+                    sud <- readSudoku path
+                    let s = solve sud
+                    if s == Nothing
+                    then do
+                      putStrLn "(no solution)"
+                    else do
+                      printSudoku (fromJust s)
+
