@@ -155,14 +155,22 @@ blanks sud = getPoses 0 (getRows sud)
 
 -- non-exhaustive patterns!!!
 checkCells :: [Pos] -> [[Maybe Int]] -> [Bool]
-checkcells  [] _  = []
+checkcells  [] _         = []
 checkCells ((r,c):ps) ls = [((ls !! r) !! c)== Nothing] ++ checkCells ps ls
 
-prop_test :: Bool
-prop_test = and (checkCells (blanks allBlankSudoku) (rows allBlankSudoku)) 
+prop_checkBlanks :: Bool
+prop_checkBlanks = and (checkCells (blanks allBlankSudoku) (rows allBlankSudoku))
 
+--E2: Replaces a value in a list.
 (!!=) :: [a] -> (Int,a) -> [a]
-(!!=) = undefined
+(!!=) [] (_,_)                                        = []
+(!!=) list (ind,_) | (ind >= length list) || ind < 0  = list
+(!!=) list (ind,val)                                  = l1 ++ [val] ++ es
+  where
+   (l1, (e:es))= splitAt ind list 
+
+prop_size :: [a] -> (Int,a)-> Bool
+prop_size list (ind, val)= length list == length ((!!=) list (ind,val)) 
 
 update :: Sudoku -> Pos -> Maybe Int -> Sudoku
 update = undefined
