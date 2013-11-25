@@ -139,3 +139,23 @@ type Pos = (Int,Int)
 -- E1: Returns a list of blank positions.
 blanks :: Sudoku -> [Pos]
 blanks = undefined
+
+(!!=) :: [a] -> (Int,a) -> [a]
+(!!=) = undefined
+
+update :: Sudoku -> Pos -> Maybe Int -> Sudoku
+update = undefined
+
+candidates :: Sudoku -> Pos -> [Int]
+candidates = undefined 
+
+
+------------------------------------------------------------------------
+-- F1: Implementation of the function that solves sudokus
+solve :: Sudoku -> Maybe Sudoku
+solve s | not (isOkay s) || not (isSudoku s) = Nothing
+        | otherwise                          = solve' s
+
+
+solve' :: Sudoku -> Maybe Sudoku
+solve' s = undefined
