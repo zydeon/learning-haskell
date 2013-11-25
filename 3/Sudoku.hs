@@ -214,3 +214,14 @@ readAndSolve path = do
                     else do
                       printSudoku (fromJust s)
 
+-- F3: checks if first sudoku is a valid solution of the second one
+isSolutionOf :: Sudoku -> Sudoku -> Bool
+isSolutionOf a b = (isSudoku a) && (isOkay a) && and [(commonElements (fst p) (snd p)) == (snd p)
+                                                        | p <- (zip (rows a) (rows b)) ]
+                                                        
+-- returns list with same length as input lists and the common elements at
+-- same position
+commonElements :: Eq a => [Maybe a] -> [Maybe a] -> [Maybe a]
+commonElements []     []     = []
+commonElements (a:as) (b:bs) | a == b    = a       : (commonElements as bs)
+                             | otherwise = Nothing : (commonElements as bs)
