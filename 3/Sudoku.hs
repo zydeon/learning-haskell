@@ -233,3 +233,8 @@ commonElements :: Eq a => [Maybe a] -> [Maybe a] -> [Maybe a]
 commonElements []     []     = []
 commonElements (a:as) (b:bs) | a == b    = a       : (commonElements as bs)
                              | otherwise = Nothing : (commonElements as bs)
+
+
+-- F4: property that says that the function solve is sound
+prop_SolveSound :: Sudoku -> Property    -- shows number of default numbers in sudoku
+prop_SolveSound s = collect ((length . (filter (/= Nothing))) (concat $ rows s)) (isSolutionOf (fromJust (solve s)) (s))
