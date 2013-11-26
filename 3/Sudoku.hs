@@ -155,7 +155,7 @@ blanks sud = getPoses 0 (getRows sud)
 
 -- non-exhaustive patterns!!!
 checkCells :: [Pos] -> [[Maybe Int]] -> [Bool]
-checkcells  [] _         = []
+checkCells  [] _         = []
 checkCells ((r,c):ps) ls = [((ls !! r) !! c)== Nothing] ++ checkCells ps ls
 
 prop_checkBlanks :: Bool
@@ -172,15 +172,20 @@ prop_checkBlanks = and (checkCells (blanks allBlankSudoku) (rows allBlankSudoku)
 prop_size :: [a] -> (Int,a)-> Bool
 prop_size list (ind, val)= length list == length ((!!=) list (ind,val)) 
 
+
 --E3: Updates a Sudoku cell
 update :: Sudoku -> Pos -> Maybe Int -> Sudoku
-update (Sudoku lists) (r,c) maybe = Sudoku $(!!=)lists (r,((!!=)(lists !! r) (c,maybe)))
+update (Sudoku lists) (r,c) maybe = Sudoku $(!!=) lists (r,((!!=)(lists !! r) (c,maybe)))
+
+checkVal :: Sudoku -> Pos -> Maybe Int -> Bool
+checkVal sud (r,c) Nothing  |(r `elem` [0..8]) && (c `elem` [0..8])                      = ((rows (update sud (r,c) Nothing)) !! r) !! c == Nothing  
+                            |otherwise                                                   = True
+checkVal sud (r,c) (Just a) |a `elem` [1..9] && ((r `elem` [0..8]) && (c `elem` [0..8])) = ((rows (update sud (r,c) (Just a))) !! r) !! c == (Just a)
+                            |otherwise                                                   = True
+
 
 prop_checkVal :: Sudoku -> Pos -> Maybe Int -> Bool
-prop_checkVal sud (r,c) Nothing  |(r `elem` [0..8]) && (c `elem` [0..8])                      = ((rows (update sud (r,c) Nothing)) !! r) !! c == Nothing
-                                 |otherwise                                                   = prop_checkVal sud (1,1) Nothing
-prop_checkVal sud (r,c) (Just a) |a `elem` [1..9] && ((r `elem` [0..8]) && (c `elem` [0..8])) = ((rows (update sud (r,c) (Just a))) !! r) !! c == (Just a)
-                                 |otherwise                                                   = prop_checkVal sud (1,1) (Just 2)
+prop_checkVal sud (r,c) maybe = checkVal sud (r,c) maybe
 
 
 candidates :: Sudoku -> Pos -> [Int]
