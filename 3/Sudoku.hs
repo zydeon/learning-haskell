@@ -153,7 +153,7 @@ blanks sud = getPoses 0 (getRows sud)
   getPos m n (Nothing:cs) = [(m,n)]++ getPos m (n+1) cs
   getPos m n (_:cs)       = getPos m (n+1) cs
 
--- non-exhaustive patterns!!!
+
 checkCells :: [Pos] -> [[Maybe Int]] -> [Bool]
 checkCells  [] _         = []
 checkCells ((r,c):ps) ls = [((ls !! r) !! c)== Nothing] ++ checkCells ps ls
@@ -177,20 +177,76 @@ prop_size list (ind, val)= length list == length ((!!=) list (ind,val))
 update :: Sudoku -> Pos -> Maybe Int -> Sudoku
 update (Sudoku lists) (r,c) maybe = Sudoku $(!!=) lists (r,((!!=)(lists !! r) (c,maybe)))
 
+
 checkVal :: Sudoku -> Pos -> Maybe Int -> Bool
-checkVal sud (r,c) Nothing  |(r `elem` [0..8]) && (c `elem` [0..8])                      = ((rows (update sud (r,c) Nothing)) !! r) !! c == Nothing  
+checkVal sud (r,c) Nothing  |(r `elem` [0..8]) && (c `elem` [0..8])                      = res1 
                             |otherwise                                                   = True
-checkVal sud (r,c) (Just a) |a `elem` [1..9] && ((r `elem` [0..8]) && (c `elem` [0..8])) = ((rows (update sud (r,c) (Just a))) !! r) !! c == (Just a)
+  where res1 = ((rows (update sud (r,c) Nothing)) !! r) !! c == Nothing
+checkVal sud (r,c) (Just a) |a `elem` [1..9] && ((r `elem` [0..8]) && (c `elem` [0..8])) = res2
                             |otherwise                                                   = True
+  where res2 = ((rows (update sud (r,c) (Just a))) !! r) !! c == (Just a)
 
 
 prop_checkVal :: Sudoku -> Pos -> Maybe Int -> Bool
 prop_checkVal sud (r,c) maybe = checkVal sud (r,c) maybe
 
 
+-- E4: Returns candidate values of a cell
 candidates :: Sudoku -> Pos -> [Int]
-candidates = undefined 
+candidates sud pos = ((checkRow sud pos)`intersect`(checkColumn sud pos))
+                       `intersect` (checkSquare sud pos)
+ where
+  checkRow :: Sudoku -> Pos -> [Int]
+  checkRow (Sudoku lists) (r,c) = cands \\ (catMaybes row)
+   where cands = [1..9]
+         row   = (lists !! r)            
 
+  checkColumn :: Sudoku -> Pos -> [Int]
+  checkColumn sud (r,c) = cands \\ (catMaybes col)
+   where cands = [1..9]
+         col   = ((getColumns sud)!! c)
+
+  checkSquare :: Sudoku -> Pos -> [Int]
+  checkSquare sud (r,c) |(r<3) && (c<3) = cands \\ (catMaybes square)
+   where square = (getSquares sud)!! 0  
+         cands  = [1..9]  
+  checkSquare sud (r,c) |(r<3) && (c<6) = cands \\ (catMaybes square)
+   where square = (getSquares sud)!! 1  
+         cands  = [1..9]
+  checkSquare sud (r,c) |(r<3)          = cands \\ (catMaybes square)
+   where square = (getSquares sud)!! 2  
+         cands  = [1..9]
+  checkSquare sud (r,c) |(r<6) && (c<3) = cands \\ (catMaybes square)
+   where square = (getSquares sud)!! 3  
+         cands  = [1..9]
+  checkSquare sud (r,c) |(r<6) && (c<6) = cands \\ (catMaybes square)
+   where square = (getSquares sud)!! 4  
+         cands  = [1..9]
+  checkSquare sud (r,c) |(r<6)          = cands \\ (catMaybes square)
+   where square = (getSquares sud)!! 5  
+         cands  = [1..9]
+  checkSquare sud (r,c) |(c<3)          = cands \\ (catMaybes square)
+   where square = (getSquares sud)!! 6  
+         cands  = [1..9]
+  checkSquare sud (r,c) |(c<6)          = cands \\ (catMaybes square)
+   where square = (getSquares sud)!! 7  
+         cands  = [1..9]
+  checkSquare sud (r,c)                 = cands \\ (catMaybes square) 
+   where square = (getSquares sud)!! 8  
+         cands  = [1..9]
+
+
+relateFuncs :: Sudoku -> Pos -> Bool
+relateFuncs sud (r,c) |(r `elem`[0..8] && c `elem` [0..8]) && (isSudoku sud && isOkay sud) = 
+                                                  and[isSudoku upd && isOkay upd| upd <- upSudList]
+                      |otherwise                                                           = True
+  where 
+   candList  = candidates sud (r,c)
+   upSudList = map (update sud (r,c)) ([Just a | a <- candList])
+
+
+prop_relateFuncs :: Sudoku -> Pos -> Bool
+prop_relateFuncs sud pos = relateFuncs sud pos
 
 ------------------------------------------------------------------------
 -- F1: Implementation of the function that solves sudokus
