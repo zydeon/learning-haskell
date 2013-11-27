@@ -38,11 +38,6 @@ checkLists list = and [inRange a | a <- list]
 
 
 -- A3: isSolved sud checks if sud is already solved, i.e. there are no blanks
-{-isSolved :: Sudoku -> Bool
-isSolved (Sudoku list) = and [hasNoth a | a <- list]
- where 
-   hasNoth :: [Maybe Int] -> Bool
-   hasNoth list = and [False | a <- list , (a == Nothing)]-}
 isSolved = all (all (/= Nothing)) . rows
 -------------------------------------------------------------------------
 
@@ -115,17 +110,13 @@ getRows (Sudoku lists) = lists
 getColumns :: Sudoku -> [Block]
 getColumns (Sudoku ls) = transpose ls
 
-getSquares :: Sudoku -> [Block]
-getSquares (Sudoku ([]:([]:([]:[])))) = []
-getSquares (Sudoku ([]:([]:([]:xs)))) = getSquares (Sudoku xs)    -- change to next row of squares
-getSquares (Sudoku (l1:(l2:(l3:xs)))) = (h1++h2++h3) : (getSquares (Sudoku (t1:(t2:(t3:xs))))) -- change to next column of squares
+getSquares :: Sudoku -> [Block]  -- squares are retrieved left->right, top->bottom
+getSquares (Sudoku [])              = []
+getSquares (Sudoku ([]:(_ :(_ :xs)))) = getSquares (Sudoku xs)    -- change to next row of squares
+getSquares (Sudoku (r1:(r2:(r3:xs)))) = square : getSquares (Sudoku (leftovers ++ xs) ) -- change to next column of squares
                                     where
-                                        h1 = take 3 l1
-                                        h2 = take 3 l2
-                                        h3 = take 3 l3
-                                        t1 = drop 3 l1
-                                        t2 = drop 3 l2
-                                        t3 = drop 3 l3
+                                        square    = concat $ map (take 3) [r1,r2,r3]
+                                        leftovers =          map (drop 3) [r1,r2,r3]
 
 blocks :: Sudoku -> [Block]
 blocks s = (getRows s) ++ (getColumns s) ++ (getSquares s)
@@ -142,99 +133,38 @@ isOkay s = and [isOkayBlock b | b <- (blocks s)]
 type Pos = (Int,Int)
 -- E1: Returns a list of blank positions.
 blanks :: Sudoku -> [Pos]
-blanks sud = getPoses 0 (getRows sud)
- where
-  getPoses :: Int -> [[Maybe Int]] -> [Pos]
-  getPoses _ []     = []
-  getPoses r (l:ls) = getPos r 0 l ++ getPoses (r+1) ls
+blanks s = concat [[(r,c) |c <- [0..8], ((rows s !! r) !! c)==Nothing] | r <- [0..8]]
 
-  getPos :: Int -> Int -> [Maybe Int] -> [Pos]
-  getPos _ _ []           = []
-  getPos m n (Nothing:cs) = [(m,n)]++ getPos m (n+1) cs
-  getPos m n (_:cs)       = getPos m (n+1) cs
-
-
-checkCells :: [Pos] -> [[Maybe Int]] -> [Bool]
-checkCells  [] _         = []
-checkCells ((r,c):ps) ls = [((ls !! r) !! c)== Nothing] ++ checkCells ps ls
-
-prop_checkBlanks :: Bool
-prop_checkBlanks = and (checkCells (blanks allBlankSudoku) (rows allBlankSudoku))
+prop_checkBlanks :: Sudoku -> Bool
+prop_checkBlanks s = and [rows s !! r !! c == Nothing | (r,c) <- (blanks s)]
 
 --E2: Replaces a value in a list.
 (!!=) :: [a] -> (Int,a) -> [a]
-(!!=) [] (_,_)                                        = []
-(!!=) list (ind,_) | (ind >= length list) || ind < 0  = list
-(!!=) list (ind,val)                                  = l1 ++ [val] ++ es
-  where
-   (l1, (e:es))= splitAt ind list 
+[]      !!= _      = []
+(x:xs)  !!= (0, v) = v: xs
+(x:xs)  !!= (n, v) = x: xs !!= (n-1, v)
 
 prop_size :: [a] -> (Int,a)-> Bool
-prop_size list (ind, val)= length list == length ((!!=) list (ind,val)) 
+prop_size list (ind, val)= length list == length (list !!= (ind,val)) 
 
 
 --E3: Updates a Sudoku cell
 update :: Sudoku -> Pos -> Maybe Int -> Sudoku
-update (Sudoku lists) (r,c) maybe = Sudoku $(!!=) lists (r,((!!=)(lists !! r) (c,maybe)))
-
-
-checkVal :: Sudoku -> Pos -> Maybe Int -> Bool
-checkVal sud (r,c) Nothing  |(r `elem` [0..8]) && (c `elem` [0..8])                      = res1 
-                            |otherwise                                                   = True
-  where res1 = ((rows (update sud (r,c) Nothing)) !! r) !! c == Nothing
-checkVal sud (r,c) (Just a) |a `elem` [1..9] && ((r `elem` [0..8]) && (c `elem` [0..8])) = res2
-                            |otherwise                                                   = True
-  where res2 = ((rows (update sud (r,c) (Just a))) !! r) !! c == (Just a)
-
+update (Sudoku lists) (r,c) maybe = Sudoku $lists !!= (r, ((lists !! r) !!= (c,maybe)))
 
 prop_checkVal :: Sudoku -> Pos -> Maybe Int -> Bool
-prop_checkVal sud (r,c) maybe = checkVal sud (r,c) maybe
-
+prop_checkVal s (r,c) v
+          | r `elem` [0..8] && 
+            c `elem` [0..8] = v == rows (update s (r,c) v) !! r !! c
+          | otherwise       = True
 
 -- E4: Returns candidate values of a cell
 candidates :: Sudoku -> Pos -> [Int]
-candidates sud pos = ((checkRow sud pos)`intersect`(checkColumn sud pos))
-                       `intersect` (checkSquare sud pos)
- where
-  checkRow :: Sudoku -> Pos -> [Int]
-  checkRow (Sudoku lists) (r,c) = cands \\ (catMaybes row)
-   where cands = [1..9]
-         row   = (lists !! r)            
-
-  checkColumn :: Sudoku -> Pos -> [Int]
-  checkColumn sud (r,c) = cands \\ (catMaybes col)
-   where cands = [1..9]
-         col   = ((getColumns sud)!! c)
-
-  checkSquare :: Sudoku -> Pos -> [Int]
-  checkSquare sud (r,c) |(r<3) && (c<3) = cands \\ (catMaybes square)
-   where square = (getSquares sud)!! 0  
-         cands  = [1..9]  
-  checkSquare sud (r,c) |(r<3) && (c<6) = cands \\ (catMaybes square)
-   where square = (getSquares sud)!! 1  
-         cands  = [1..9]
-  checkSquare sud (r,c) |(r<3)          = cands \\ (catMaybes square)
-   where square = (getSquares sud)!! 2  
-         cands  = [1..9]
-  checkSquare sud (r,c) |(r<6) && (c<3) = cands \\ (catMaybes square)
-   where square = (getSquares sud)!! 3  
-         cands  = [1..9]
-  checkSquare sud (r,c) |(r<6) && (c<6) = cands \\ (catMaybes square)
-   where square = (getSquares sud)!! 4  
-         cands  = [1..9]
-  checkSquare sud (r,c) |(r<6)          = cands \\ (catMaybes square)
-   where square = (getSquares sud)!! 5  
-         cands  = [1..9]
-  checkSquare sud (r,c) |(c<3)          = cands \\ (catMaybes square)
-   where square = (getSquares sud)!! 6  
-         cands  = [1..9]
-  checkSquare sud (r,c) |(c<6)          = cands \\ (catMaybes square)
-   where square = (getSquares sud)!! 7  
-         cands  = [1..9]
-  checkSquare sud (r,c)                 = cands \\ (catMaybes square) 
-   where square = (getSquares sud)!! 8  
-         cands  = [1..9]
-
+candidates s (r,c) = [1..9] \\ row `union` col `union` squ
+      where row = catMaybes $ getRows    s !! r
+            col = catMaybes $ getColumns s !! c
+            -- assuming squares are retrieved left->right, top->bottom
+            squ = catMaybes $ getSquares s !! ( (r `div` 3) * 3 + (c `div`3))
 
 relateFuncs :: Sudoku -> Pos -> Bool
 relateFuncs sud (r,c) |(r `elem`[0..8] && c `elem` [0..8]) && (isSudoku sud && isOkay sud) = 
@@ -258,19 +188,11 @@ solve s | not (isOkay s) || not (isSudoku s) = Nothing
 solve' :: Sudoku -> Maybe Sudoku
 solve' s | null blanks_     = Just s
          | null candidates_ = Nothing
-         | otherwise        = solve'' s pos candidates_
-
+         | otherwise        = head ( filter (/=Nothing) (map (solve' . (update s pos)) candidates_)
+                                     ++ [Nothing] )   -- no solution found
             where blanks_     = blanks s
                   pos         = blanks_ !! 0
                   candidates_ = map Just (candidates s pos)
-                  
-                  -- tries sudoku solutions with given candidates to position Pos
-                  solve'' :: Sudoku -> Pos -> [Maybe Int] -> Maybe Sudoku
-                  solve'' s p [] = Nothing
-                  solve'' s p (c:cs) | solution == Nothing  = solve'' s p cs
-                                     | otherwise            = solution 
-                                        where solution = solve' (update s p c) 
-
 
 -- F2: solving sudoku from file
 readAndSolve :: FilePath -> IO ()
@@ -285,16 +207,11 @@ readAndSolve path = do
 
 -- F3: checks if first sudoku is a valid solution of the second one
 isSolutionOf :: Sudoku -> Sudoku -> Bool
-isSolutionOf a b = (isSudoku a) && (isOkay a) && and [(commonElements (fst p) (snd p)) == (snd p)
-                                                        | p <- (zip (rows a) (rows b)) ]
-                                                        
--- returns list with same length as input lists and the common elements at
--- same position
-commonElements :: Eq a => [Maybe a] -> [Maybe a] -> [Maybe a]
-commonElements []     []     = []
-commonElements (a:as) (b:bs) | a == b    = a       : (commonElements as bs)
-                             | otherwise = Nothing : (commonElements as bs)
-
+isSolutionOf a b =  (isSudoku a) && (isOkay a) &&
+                    length (blanks a) == 0 && [map equalEl (zip (fst p) (snd p)) | p <- zip (rows a) (rows b)] == rows b
+                where equalEl :: Eq a => (Maybe a, Maybe a) -> Maybe a
+                      equalEl (p,q) | p == q = p
+                      equalEl _              = Nothing
 
 -- F4: property that says that the function solve is sound
 prop_SolveSound :: Sudoku -> Property    -- shows number of default numbers in sudoku
