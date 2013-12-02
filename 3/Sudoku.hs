@@ -153,10 +153,9 @@ update :: Sudoku -> Pos -> Maybe Int -> Sudoku
 update (Sudoku lists) (r,c) maybe = Sudoku $lists !!= (r, ((lists !! r) !!= (c,maybe)))
 
 prop_checkVal :: Sudoku -> Pos -> Maybe Int -> Bool
-prop_checkVal s (r,c) v
-          | r `elem` [0..8] && 
-            c `elem` [0..8] = v == rows (update s (r,c) v) !! r !! c
-          | otherwise       = True
+prop_checkVal s (r,c) v = v == rows (update s (r',c') v) !! r' !! c'
+                      where r' = r `mod`9
+                            c' = c `mod`9
 
 -- E4: Returns candidate values of a cell
 candidates :: Sudoku -> Pos -> [Int]
@@ -167,12 +166,15 @@ candidates s (r,c) = [1..9] \\ row `union` col `union` squ
             squ = catMaybes $ getSquares s !! ( (r `div` 3) * 3 + (c `div`3))
 
 relateFuncs :: Sudoku -> Pos -> Bool
-relateFuncs sud (r,c) |(r `elem`[0..8] && c `elem` [0..8]) && (isSudoku sud && isOkay sud) = 
-                                                  and[isSudoku upd && isOkay upd| upd <- upSudList]
-                      |otherwise                                                           = True
-  where 
-   candList  = candidates sud (r,c)
-   upSudList = map (update sud (r,c)) ([Just a | a <- candList])
+relateFuncs sud (r,c) | (isSudoku sud && isOkay sud) = 
+                        and[isSudoku upd && isOkay upd| upd <- upSudList]
+                      | otherwise =
+                        True
+  where
+    r'        = r `mod` 9
+    c'        = c `mod` 9
+    candList  = candidates sud (r',c')
+    upSudList = map (update sud (r',c')) ([Just a | a <- candList])
 
 
 prop_relateFuncs :: Sudoku -> Pos -> Bool
@@ -187,12 +189,11 @@ solve s | not (isOkay s) || not (isSudoku s) = Nothing
 
 solve' :: Sudoku -> Maybe Sudoku
 solve' s | null blanks_     = Just s
-         | null candidates_ = Nothing
          | otherwise        = head ( filter (/=Nothing) (map (solve' . (update s pos)) candidates_)
                                      ++ [Nothing] )   -- no solution found
             where blanks_     = blanks s
                   pos         = blanks_ !! 0
-                  candidates_ = map Just (candidates s pos)
+                  candidates_ = map Just (candidates s pos) 
 
 -- F2: solving sudoku from file
 readAndSolve :: FilePath -> IO ()
@@ -208,11 +209,13 @@ readAndSolve path = do
 -- F3: checks if first sudoku is a valid solution of the second one
 isSolutionOf :: Sudoku -> Sudoku -> Bool
 isSolutionOf a b =  (isSudoku a) && (isOkay a) &&
-                    length (blanks a) == 0 && [map equalEl (zip (fst p) (snd p)) | p <- zip (rows a) (rows b)] == rows b
+                    isSolved a && [map equalEl (zip (fst p) (snd p)) | p <- zip (rows a) (rows b)] == rows b
                 where equalEl :: Eq a => (Maybe a, Maybe a) -> Maybe a
                       equalEl (p,q) | p == q = p
                       equalEl _              = Nothing
 
 -- F4: property that says that the function solve is sound
 prop_SolveSound :: Sudoku -> Property    -- shows number of default numbers in sudoku
-prop_SolveSound s = collect ((length . (filter (/= Nothing))) (concat $ rows s)) (isSolutionOf (fromJust (solve s)) (s))
+prop_SolveSound s | s' == Nothing = collect s' True
+                  | otherwise     = collect s' (isSolutionOf (fromJust s') s)
+              where s' = solve s
