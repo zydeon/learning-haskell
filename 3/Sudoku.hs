@@ -174,20 +174,14 @@ candidates s (r,c) = bits (foldl f (foldl f (foldl f (2^9-1) squ) col) row)    -
                     bits' n b | even n    =     bits' (n `div` 2) (b+1)
                               | otherwise = b : bits' (n `div` 2) (b+1)            
 
-relateFuncs :: Sudoku -> Pos -> Bool
-relateFuncs sud (r,c) | (isSudoku sud && isOkay sud) = 
+prop_relateFuncs :: Sudoku -> Pos -> Property
+prop_relateFuncs sud (r,c) = (isSudoku sud && isOkay sud) ==> 
                         and[isSudoku upd && isOkay upd| upd <- upSudList]
-                      | otherwise =
-                        True
   where
     r'        = r `mod` 9
     c'        = c `mod` 9
     candList  = candidates sud (r',c')
     upSudList = map (update sud (r',c')) ([Just a | a <- candList])
-
-
-prop_relateFuncs :: Sudoku -> Pos -> Bool
-prop_relateFuncs sud pos = relateFuncs sud pos
 
 ------------------------------------------------------------------------
 -- F1: Implementation of the function that solves sudokus
