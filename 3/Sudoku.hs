@@ -1,10 +1,11 @@
 module Sudoku where
 
-import Test.QuickCheck
+import Test.QuickCheck hiding ((.&.))
 import System.IO
 import Data.Char
 import Data.List
 import Data.Maybe
+import Data.Bits ((.&.), complement)
 
 -------------------------------------------------------------------------
 
@@ -157,22 +158,23 @@ prop_checkVal s (r,c) v = v == rows (update s (r',c') v) !! r' !! c'
                       where r' = r `mod` 9
                             c' = c `mod` 9
 
+
 -- E4: Returns candidate values of a cell
 candidates :: Sudoku -> Pos -> [Int]
 --candidates s (r,c) = (([1..9] \\ row) \\ col) \\ squ    -- quadratic version
-candidates s (r,c) = bits (foldl f (foldl f (foldl f (2^9-1) squ) col) row)    -- linear version encode list to a number
+candidates s (r,c) = bits (foldl f (foldl f (foldl f 511 squ) col) row)    -- linear version encode list to a number
       where row = catMaybes $ getRows    s !! r
             col = catMaybes $ getColumns s !! c
             -- assuming squares are retrieved left->right, top->bottom
             squ = catMaybes $ getSquares s !! ( (r `div` 3) * 3 + (c `div` 3))
-            f   = \a b -> a-2^(b-1)
+            f   = \a b -> a .&. (complement $ 2^(b-1))
 
             bits :: Int -> [Int]
             bits n = bits' n 1
               where bits' :: Int -> Int -> [Int]
                     bits' 0 _             = []
                     bits' n b | even n    =     bits' (n `div` 2) (b+1)
-                              | otherwise = b : bits' (n `div` 2) (b+1)            
+                              | otherwise = b : bits' (n `div` 2) (b+1)
 
 prop_relateFuncs :: Sudoku -> Pos -> Property
 prop_relateFuncs sud (r,c) = (isSudoku sud && isOkay sud) ==> 
