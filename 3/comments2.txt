@@ -1,8 +1,0 @@
-Comments:
-----------
-Good!  A comment:
-
-* I would use "==>" instead of guards in relateFuncs.  This would discard those
-cases where the generated sudoku is not okay, and also it looks rather awkward
-to define something of type Bool with guards....
-----------
