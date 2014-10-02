@@ -2,6 +2,6 @@
 
 Implementation of a Sudoku solver in Haskell.
 
-__Usage_:  
+__Usage__:  
 `$ ghci Sudoku.hs`  
 `*Sudoku> readAndSolve "example.sudoku"`
