@@ -3,6 +3,6 @@
 Implementation of the game Blackjack in Haskell.
 
 __Usage:__  
-`$ ghci BlackJack.hs`
+`$ ghci BlackJack.hs`  
 `*BlackJack> main`
 
